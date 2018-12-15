@@ -11,6 +11,8 @@ const evListener = "EventListener";
 const remEv = rem + evListener;
 const addEv = add + evListener;
 
+const evOpts = {passive: true};
+
 function qsaEach(el, sel, fn) {
 	var els = [].slice.call(el.querySelectorAll(sel));
 
@@ -102,7 +104,7 @@ export function yall(userOptions) {
         active = false;
 
         if (lazyElements.length === 0 && options.observeChanges === false) {
-          eventsToBind.forEach(eventPair => eventPair[0][remEv](eventPair[1], yallBack));
+          eventsToBind.forEach(eventPair => eventPair[0][remEv](eventPair[1], yallBack, evOpts));
         }
       }, options.throttleTime);
     }
@@ -170,7 +172,7 @@ export function yall(userOptions) {
 
     lazyElements.forEach(lazyElement => intersectionListener.observe(lazyElement));
   } else {
-    eventsToBind.forEach(eventPair => eventPair[0][addEv](eventPair[1], yallBack));
+    eventsToBind.forEach(eventPair => eventPair[0][addEv](eventPair[1], yallBack, evOpts));
     yallBack();
   }
 

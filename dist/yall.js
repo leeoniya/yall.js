@@ -20,6 +20,8 @@
   var remEv = rem + evListener;
   var addEv = add + evListener;
 
+  var evOpts = {passive: true};
+
   function qsaEach(el, sel, fn) {
   	var els = [].slice.call(el.querySelectorAll(sel));
 
@@ -111,7 +113,7 @@
           active = false;
 
           if (lazyElements.length === 0 && options.observeChanges === false) {
-            eventsToBind.forEach(function (eventPair) { return eventPair[0][remEv](eventPair[1], yallBack); });
+            eventsToBind.forEach(function (eventPair) { return eventPair[0][remEv](eventPair[1], yallBack, evOpts); });
           }
         }, options.throttleTime);
       }
@@ -178,7 +180,7 @@
 
       lazyElements.forEach(function (lazyElement) { return intersectionListener.observe(lazyElement); });
     } else {
-      eventsToBind.forEach(function (eventPair) { return eventPair[0][addEv](eventPair[1], yallBack); });
+      eventsToBind.forEach(function (eventPair) { return eventPair[0][addEv](eventPair[1], yallBack, evOpts); });
       yallBack();
     }
 
