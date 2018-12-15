@@ -10,6 +10,16 @@
   var doc = document;
   var win = window;
 
+  var add = "add";
+  var rem = "remove";
+  var attr = "Attribute";
+  var setAttr = "set" + attr;
+  var remAttr = rem + attr;
+  var classList = "classList";
+  var evListener = "EventListener";
+  var remEv = rem + evListener;
+  var addEv = add + evListener;
+
   function qsaEach(el, sel, fn) {
   	var els = [].slice.call(el.querySelectorAll(sel));
 
@@ -52,13 +62,13 @@
       // Lazy load <iframe> elements
       if (element.tagName === "IFRAME") {
         element.src = element.dataset.src;
-        element.removeAttribute("data-src");
+        element[remAttr]("data-src");
       }
 
       // Lazy load CSS background images
-      if (element.classList.contains(options.lazyBackgroundClass)) {
-        element.classList.remove(options.lazyBackgroundClass);
-        element.classList.add(options.lazyBackgroundLoaded);
+      if (element[classList].contains(options.lazyBackgroundClass)) {
+        element[classList][rem](options.lazyBackgroundClass);
+        element[classList][add](options.lazyBackgroundLoaded);
       }
     };
 
@@ -68,8 +78,8 @@
     var yallFlipDataAttrs = function(element) {
       for (var dataAttribute in element.dataset) {
         if (acceptedDataAttributes.indexOf(("data-" + dataAttribute)) !== -1) {
-          element.setAttribute(dataAttribute, element.dataset[dataAttribute]);
-          element.removeAttribute(("data-" + dataAttribute));
+          element[setAttr](dataAttribute, element.dataset[dataAttribute]);
+          element[remAttr](("data-" + dataAttribute));
         }
       }
     };
@@ -93,7 +103,7 @@
                 yallLoad(lazyElement);
               }
 
-              lazyElement.classList.remove(options.lazyClass);
+              lazyElement[classList][rem](options.lazyClass);
               lazyElements = lazyElements.filter(function (element) { return element !== lazyElement; });
             }
           });
@@ -101,7 +111,7 @@
           active = false;
 
           if (lazyElements.length === 0 && options.observeChanges === false) {
-            eventsToBind.forEach(function (eventPair) { return eventPair[0].removeEventListener(eventPair[1], yallBack); });
+            eventsToBind.forEach(function (eventPair) { return eventPair[0][remEv](eventPair[1], yallBack); });
           }
         }, options.throttleTime);
       }
@@ -157,7 +167,7 @@
               yallLoad(element);
             }
 
-            element.classList.remove(options.lazyClass);
+            element[classList][rem](options.lazyClass);
             observer.unobserve(element);
             lazyElements = lazyElements.filter(function (lazyElement) { return lazyElement !== element; });
           }
@@ -168,7 +178,7 @@
 
       lazyElements.forEach(function (lazyElement) { return intersectionListener.observe(lazyElement); });
     } else {
-      eventsToBind.forEach(function (eventPair) { return eventPair[0].addEventListener(eventPair[1], yallBack); });
+      eventsToBind.forEach(function (eventPair) { return eventPair[0][addEv](eventPair[1], yallBack); });
       yallBack();
     }
 

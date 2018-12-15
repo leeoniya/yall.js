@@ -1,6 +1,16 @@
 const doc = document;
 const win = window;
 
+const add = "add";
+const rem = "remove";
+const attr = "Attribute";
+const setAttr = "set" + attr;
+const remAttr = rem + attr;
+const classList = "classList";
+const evListener = "EventListener";
+const remEv = rem + evListener;
+const addEv = add + evListener;
+
 function qsaEach(el, sel, fn) {
 	var els = [].slice.call(el.querySelectorAll(sel));
 
@@ -43,13 +53,13 @@ export function yall(userOptions) {
     // Lazy load <iframe> elements
     if (element.tagName === "IFRAME") {
       element.src = element.dataset.src;
-      element.removeAttribute("data-src");
+      element[remAttr]("data-src");
     }
 
     // Lazy load CSS background images
-    if (element.classList.contains(options.lazyBackgroundClass)) {
-      element.classList.remove(options.lazyBackgroundClass);
-      element.classList.add(options.lazyBackgroundLoaded);
+    if (element[classList].contains(options.lazyBackgroundClass)) {
+      element[classList][rem](options.lazyBackgroundClass);
+      element[classList][add](options.lazyBackgroundLoaded);
     }
   };
 
@@ -59,8 +69,8 @@ export function yall(userOptions) {
   let yallFlipDataAttrs = function(element) {
     for (let dataAttribute in element.dataset) {
       if (acceptedDataAttributes.indexOf(`data-${dataAttribute}`) !== -1) {
-        element.setAttribute(dataAttribute, element.dataset[dataAttribute]);
-        element.removeAttribute(`data-${dataAttribute}`);
+        element[setAttr](dataAttribute, element.dataset[dataAttribute]);
+        element[remAttr](`data-${dataAttribute}`);
       }
     }
   };
@@ -84,7 +94,7 @@ export function yall(userOptions) {
               yallLoad(lazyElement);
             }
 
-            lazyElement.classList.remove(options.lazyClass);
+            lazyElement[classList][rem](options.lazyClass);
             lazyElements = lazyElements.filter(element => element !== lazyElement);
           }
         });
@@ -92,7 +102,7 @@ export function yall(userOptions) {
         active = false;
 
         if (lazyElements.length === 0 && options.observeChanges === false) {
-          eventsToBind.forEach(eventPair => eventPair[0].removeEventListener(eventPair[1], yallBack));
+          eventsToBind.forEach(eventPair => eventPair[0][remEv](eventPair[1], yallBack));
         }
       }, options.throttleTime);
     }
@@ -149,7 +159,7 @@ export function yall(userOptions) {
             yallLoad(element);
           }
 
-          element.classList.remove(options.lazyClass);
+          element[classList][rem](options.lazyClass);
           observer.unobserve(element);
           lazyElements = lazyElements.filter(lazyElement => lazyElement !== element);
         }
@@ -160,7 +170,7 @@ export function yall(userOptions) {
 
     lazyElements.forEach(lazyElement => intersectionListener.observe(lazyElement));
   } else {
-    eventsToBind.forEach(eventPair => eventPair[0].addEventListener(eventPair[1], yallBack));
+    eventsToBind.forEach(eventPair => eventPair[0][addEv](eventPair[1], yallBack));
     yallBack();
   }
 
