@@ -1,6 +1,15 @@
-export function yall(userOptions) {
-  "use strict";
+const doc = document;
 
+function qsaEach(el, sel, fn) {
+	var els = [].slice.call(el.querySelectorAll(sel));
+
+	if (fn != null)
+		els.forEach(fn);
+
+	return els;
+}
+
+export function yall(userOptions) {
   // This function handles the lazy loading of elements. It's kicked off by the
   // scroll handlers/intersection observers further down.
   let yallLoad = function(element) {
@@ -10,7 +19,7 @@ export function yall(userOptions) {
 
       // Is the parent element a <picture>?
       if (parentElement.tagName === "PICTURE") {
-        [].slice.call(parentElement.querySelectorAll("source")).forEach(source => yallFlipDataAttrs(source));
+        qsaEach(parentElement, "source", source => yallFlipDataAttrs(source));
       }
 
       yallFlipDataAttrs(element);
@@ -18,7 +27,7 @@ export function yall(userOptions) {
 
     // Lazy load <video> elements
     if (element.tagName === "VIDEO") {
-      [].slice.call(element.querySelectorAll("source")).forEach(source => yallFlipDataAttrs(source));
+      qsaEach(element, "source", source => yallFlipDataAttrs(source));
 
       // We didn't need this before, but with the addition of lazy loading
       // `poster` images, we need to run the flip attributes function on the
@@ -95,8 +104,8 @@ export function yall(userOptions) {
     ignoredImgAttributes: ["data-src", "data-sizes", "data-media", "data-srcset", "src", "srcset"],
     acceptedDataAttributes: ["data-src", "data-sizes", "data-media", "data-srcset", "data-poster"],
     eventsToBind: [
-      [document, "scroll"],
-      [document, "touchmove"],
+      [doc, "scroll"],
+      [doc, "touchmove"],
       [window, "resize"],
       [window, "orientationchange"]
     ]
@@ -127,7 +136,7 @@ export function yall(userOptions) {
     timeout: options.idleLoadTimeout
   };
 
-  let lazyElements = [].slice.call(document.querySelectorAll(selectorString));
+  let lazyElements = qsaEach(doc, selectorString);
 
   if (env.intersectionObserverSupport === true) {
     var intersectionListener = new IntersectionObserver((entries, observer) => {
@@ -158,7 +167,7 @@ export function yall(userOptions) {
 
   if (env.mutationObserverSupport === true && options.observeChanges === true) {
     new MutationObserver(mutations => mutations.forEach(() => {
-      [].slice.call(document.querySelectorAll(selectorString)).forEach(newElement => {
+      qsaEach(doc, selectorString, newElement => {
         if (lazyElements.indexOf(newElement) === -1) {
           lazyElements.push(newElement);
 
@@ -169,6 +178,6 @@ export function yall(userOptions) {
           }
         }
       });
-    })).observe(document.querySelector(options.observeRootSelector), options.mutationObserverOptions);
+    })).observe(doc.querySelector(options.observeRootSelector), options.mutationObserverOptions);
   }
 }

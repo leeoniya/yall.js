@@ -7,8 +7,18 @@
 (function (exports) {
   'use strict';
 
-  function yall(userOptions) {
+  var doc = document;
 
+  function qsaEach(el, sel, fn) {
+  	var els = [].slice.call(el.querySelectorAll(sel));
+
+  	if (fn != null)
+  		{ els.forEach(fn); }
+
+  	return els;
+  }
+
+  function yall(userOptions) {
     // This function handles the lazy loading of elements. It's kicked off by the
     // scroll handlers/intersection observers further down.
     var yallLoad = function(element) {
@@ -18,7 +28,7 @@
 
         // Is the parent element a <picture>?
         if (parentElement.tagName === "PICTURE") {
-          [].slice.call(parentElement.querySelectorAll("source")).forEach(function (source) { return yallFlipDataAttrs(source); });
+          qsaEach(parentElement, "source", function (source) { return yallFlipDataAttrs(source); });
         }
 
         yallFlipDataAttrs(element);
@@ -26,7 +36,7 @@
 
       // Lazy load <video> elements
       if (element.tagName === "VIDEO") {
-        [].slice.call(element.querySelectorAll("source")).forEach(function (source) { return yallFlipDataAttrs(source); });
+        qsaEach(element, "source", function (source) { return yallFlipDataAttrs(source); });
 
         // We didn't need this before, but with the addition of lazy loading
         // `poster` images, we need to run the flip attributes function on the
@@ -103,8 +113,8 @@
       ignoredImgAttributes: ["data-src", "data-sizes", "data-media", "data-srcset", "src", "srcset"],
       acceptedDataAttributes: ["data-src", "data-sizes", "data-media", "data-srcset", "data-poster"],
       eventsToBind: [
-        [document, "scroll"],
-        [document, "touchmove"],
+        [doc, "scroll"],
+        [doc, "touchmove"],
         [window, "resize"],
         [window, "orientationchange"]
       ]
@@ -135,7 +145,7 @@
       timeout: options.idleLoadTimeout
     };
 
-    var lazyElements = [].slice.call(document.querySelectorAll(selectorString));
+    var lazyElements = qsaEach(doc, selectorString);
 
     if (env.intersectionObserverSupport === true) {
       var intersectionListener = new IntersectionObserver(function (entries, observer) {
@@ -166,7 +176,7 @@
 
     if (env.mutationObserverSupport === true && options.observeChanges === true) {
       new MutationObserver(function (mutations) { return mutations.forEach(function () {
-        [].slice.call(document.querySelectorAll(selectorString)).forEach(function (newElement) {
+        qsaEach(doc, selectorString, function (newElement) {
           if (lazyElements.indexOf(newElement) === -1) {
             lazyElements.push(newElement);
 
@@ -177,7 +187,7 @@
             }
           }
         });
-      }); }).observe(document.querySelector(options.observeRootSelector), options.mutationObserverOptions);
+      }); }).observe(doc.querySelector(options.observeRootSelector), options.mutationObserverOptions);
     }
   }
 
