@@ -31,7 +31,7 @@
   	return els;
   }
 
-  function yall(userOptions) {
+  function yall(userOpts) {
     // This function handles the lazy loading of elements. It's kicked off by the
     // scroll handlers/intersection observers further down.
     var yallLoad = function(element) {
@@ -68,9 +68,9 @@
       }
 
       // Lazy load CSS background images
-      if (element[classList].contains(options.lazyBackgroundClass)) {
-        element[classList][rem](options.lazyBackgroundClass);
-        element[classList][add](options.lazyBackgroundLoaded);
+      if (element[classList].contains(opts[lazyBackgroundClass])) {
+        element[classList][rem](opts[lazyBackgroundClass]);
+        element[classList][add](opts[lazyBackgroundLoaded]);
       }
     };
 
@@ -96,26 +96,26 @@
 
         setTimeout(function () {
           lazyElements.forEach(function (lazyElement) {
-            if (lazyElement.getBoundingClientRect().top <= (win.innerHeight + options.threshold) && lazyElement.getBoundingClientRect().bottom >= -(options.threshold) && getComputedStyle(lazyElement).display !== "none") {
-              if (options.idlyLoad === true && idleCallbackSupport === true) {
+            if (lazyElement.getBoundingClientRect().top <= (win.innerHeight + opts[threshold]) && lazyElement.getBoundingClientRect().bottom >= -(opts[threshold]) && getComputedStyle(lazyElement).display !== "none") {
+              if (opts[idlyLoad] === true && idleCallbackSupport === true) {
                 requestIdleCallback(function () {
                   yallLoad(lazyElement);
-                }, idleCallbackOptions);
+                }, idleCallbackOpts);
               } else {
                 yallLoad(lazyElement);
               }
 
-              lazyElement[classList][rem](options.lazyClass);
+              lazyElement[classList][rem](opts[lazyClass]);
               lazyElements = lazyElements.filter(function (element) { return element !== lazyElement; });
             }
           });
 
           active = false;
 
-          if (lazyElements.length === 0 && options.observeChanges === false) {
+          if (lazyElements.length === 0 && opts[observeChanges] === false) {
             eventsToBind.forEach(function (eventPair) { return eventPair[0][remEv](eventPair[1], yallBack, evOpts); });
           }
-        }, options.throttleTime);
+        }, opts[throttleTime]);
       }
     };
 
@@ -130,29 +130,40 @@
       [win, "orientationchange"]
     ];
 
-    var options = {
-      lazyClass: "lazy",
-      lazyBackgroundClass: "lazy-bg",
-      lazyBackgroundLoaded: "lazy-bg-loaded",
-      throttleTime: 200,
-      idlyLoad: false,
-      idleLoadTimeout: 100,
-      threshold: 200,
-      observeChanges: false,
-      observeRootSelector: "body",
-      mutationObserverOptions: {
-        childList: true
-      },
-    };
+      var lazyClass = "lazyClass";
+      var lazyBackgroundClass = "lazyBackgroundClass";
+      var lazyBackgroundLoaded = "lazyBackgroundLoaded";
+      var throttleTime = "throttleTime";
+      var idlyLoad = "idlyLoad";
+      var idleLoadTimeout = "idleLoadTimeout";
+      var threshold = "threshold";
+      var observeChanges = "observeChanges";
+      var observeRootSelector = "observeRootSelector";
+      var mutationObserveropts = "mutationObserveropts";
 
-    if (userOptions != null) {
-      for (var key in userOptions)
-        { options[key] = userOptions[key]; }
+    var opts = {};
+
+     opts[lazyClass] = "lazy";
+     opts[lazyBackgroundClass] = "lazy-bg";
+     opts[lazyBackgroundLoaded] = "lazy-bg-loaded";
+     opts[throttleTime] = 200;
+     opts[idlyLoad] = false;
+     opts[idleLoadTimeout] = 100;
+     opts[threshold] = 200;
+     opts[observeChanges] = false;
+     opts[observeRootSelector] = "body";
+     opts[mutationObserveropts] = {
+        childList: true
+      };
+
+    if (userOpts != null) {
+      for (var key in userOpts)
+        { opts[key] = userOpts[key]; }
     }
 
-    var selectorString = "img." + (options.lazyClass) + ",video." + (options.lazyClass) + ",iframe." + (options.lazyClass) + ",." + (options.lazyBackgroundClass);
-    var idleCallbackOptions = {
-      timeout: options.idleLoadTimeout
+    var selectorString = "img." + (opts[lazyClass]) + ",video." + (opts[lazyClass]) + ",iframe." + (opts[lazyClass]) + ",." + (opts[lazyBackgroundClass]);
+    var idleCallbackOpts = {
+      timeout: opts[idleLoadTimeout]
     };
 
     var lazyElements = qsaEach(doc, selectorString);
@@ -163,19 +174,19 @@
           if (entry.isIntersecting === true || entry.intersectionRatio > 0) {
             var element = entry.target;
 
-            if (options.idlyLoad === true && idleCallbackSupport === true) {
-              requestIdleCallback(function () { return yallLoad(element); }, idleCallbackOptions);
+            if (opts[idlyLoad] === true && idleCallbackSupport === true) {
+              requestIdleCallback(function () { return yallLoad(element); }, idleCallbackOpts);
             } else {
               yallLoad(element);
             }
 
-            element[classList][rem](options.lazyClass);
+            element[classList][rem](opts[lazyClass]);
             observer.unobserve(element);
             lazyElements = lazyElements.filter(function (lazyElement) { return lazyElement !== element; });
           }
         });
       }, {
-        rootMargin: ((options.threshold) + "px 0%")
+        rootMargin: ((opts[threshold]) + "px 0%")
       });
 
       lazyElements.forEach(function (lazyElement) { return intersectionListener.observe(lazyElement); });
@@ -184,7 +195,7 @@
       yallBack();
     }
 
-    if (mutationObserverSupport === true && options.observeChanges === true) {
+    if (mutationObserverSupport === true && opts[observeChanges] === true) {
       new MutationObserver(function (mutations) { return mutations.forEach(function () {
         qsaEach(doc, selectorString, function (newElement) {
           if (lazyElements.indexOf(newElement) === -1) {
@@ -197,7 +208,7 @@
             }
           }
         });
-      }); }).observe(doc.querySelector(options.observeRootSelector), options.mutationObserverOptions);
+      }); }).observe(doc.querySelector(opts[observeRootSelector]), opts[mutationObserverOptions]);
     }
   }
 
