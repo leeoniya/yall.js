@@ -47,7 +47,7 @@ export function yall(userOpts) {
       // video element itself so we can trigger lazy loading behavior on those.
       yallFlipDataAttrs(element);
 
-      if (element.autoplay === true) {
+      if (element.autoplay) {
         element.load();
       }
     }
@@ -82,13 +82,13 @@ export function yall(userOpts) {
   let yallBack = function() {
     let active = false;
 
-    if (active === false && lazyElements.length > 0) {
+    if (!active && lazyElements.length > 0) {
       active = true;
 
       setTimeout(() => {
         lazyElements.forEach(lazyElement => {
           if (lazyElement.getBoundingClientRect().top <= (win.innerHeight + opts[threshold]) && lazyElement.getBoundingClientRect().bottom >= -(opts[threshold]) && getComputedStyle(lazyElement).display !== "none") {
-            if (opts[idlyLoad] === true && idleCallbackSupport === true) {
+            if (opts[idlyLoad] && idleCallbackSupport) {
               requestIdleCallback(() => {
                 yallLoad(lazyElement);
               }, idleCallbackOpts);
@@ -103,7 +103,7 @@ export function yall(userOpts) {
 
         active = false;
 
-        if (lazyElements.length === 0 && opts[observeChanges] === false) {
+        if (lazyElements.length === 0 && !opts[observeChanges]) {
           eventsToBind.forEach(eventPair => eventPair[0][remEv](eventPair[1], yallBack, evOpts));
         }
       }, opts[throttleTime]);
@@ -160,13 +160,13 @@ export function yall(userOpts) {
 
   let lazyElements = qsaEach(doc, selectorString);
 
-  if (intersectionObserverSupport === true) {
+  if (intersectionObserverSupport) {
     var intersectionListener = new IntersectionObserver((entries, observer) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting === true || entry.intersectionRatio > 0) {
+        if (entry.isIntersecting || entry.intersectionRatio > 0) {
           let element = entry.target;
 
-          if (opts[idlyLoad] === true && idleCallbackSupport === true) {
+          if (opts[idlyLoad] && idleCallbackSupport) {
             requestIdleCallback(() => yallLoad(element), idleCallbackOpts);
           } else {
             yallLoad(element);
@@ -187,13 +187,13 @@ export function yall(userOpts) {
     yallBack();
   }
 
-  if (mutationObserverSupport === true && opts[observeChanges] === true) {
+  if (mutationObserverSupport && opts[observeChanges]) {
     new MutationObserver(mutations => mutations.forEach(() => {
       qsaEach(doc, selectorString, newElement => {
         if (lazyElements.indexOf(newElement) === -1) {
           lazyElements.push(newElement);
 
-          if (intersectionObserverSupport === true) {
+          if (intersectionObserverSupport) {
             intersectionListener.observe(newElement);
           } else {
             yallBack();
