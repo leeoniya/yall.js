@@ -8,6 +8,7 @@
   'use strict';
 
   var doc = document;
+  var win = window;
 
   function qsaEach(el, sel, fn) {
   	var els = [].slice.call(el.querySelectorAll(sel));
@@ -66,7 +67,7 @@
     // to make sure the data attr is in a whitelist to avoid changing *all* of them)
     var yallFlipDataAttrs = function(element) {
       for (var dataAttribute in element.dataset) {
-        if (env.acceptedDataAttributes.indexOf(("data-" + dataAttribute)) !== -1) {
+        if (acceptedDataAttributes.indexOf(("data-" + dataAttribute)) !== -1) {
           element.setAttribute(dataAttribute, element.dataset[dataAttribute]);
           element.removeAttribute(("data-" + dataAttribute));
         }
@@ -83,8 +84,8 @@
 
         setTimeout(function () {
           lazyElements.forEach(function (lazyElement) {
-            if (lazyElement.getBoundingClientRect().top <= (window.innerHeight + options.threshold) && lazyElement.getBoundingClientRect().bottom >= -(options.threshold) && getComputedStyle(lazyElement).display !== "none") {
-              if (options.idlyLoad === true && env.idleCallbackSupport === true) {
+            if (lazyElement.getBoundingClientRect().top <= (win.innerHeight + options.threshold) && lazyElement.getBoundingClientRect().bottom >= -(options.threshold) && getComputedStyle(lazyElement).display !== "none") {
+              if (options.idlyLoad === true && idleCallbackSupport === true) {
                 requestIdleCallback(function () {
                   yallLoad(lazyElement);
                 }, idleCallbackOptions);
@@ -100,25 +101,22 @@
           active = false;
 
           if (lazyElements.length === 0 && options.observeChanges === false) {
-            env.eventsToBind.forEach(function (eventPair) { return eventPair[0].removeEventListener(eventPair[1], yallBack); });
+            eventsToBind.forEach(function (eventPair) { return eventPair[0].removeEventListener(eventPair[1], yallBack); });
           }
         }, options.throttleTime);
       }
     };
 
-    var env = {
-      intersectionObserverSupport: "IntersectionObserver" in window && "IntersectionObserverEntry" in window && "intersectionRatio" in window.IntersectionObserverEntry.prototype,
-      mutationObserverSupport: "MutationObserver" in window,
-      idleCallbackSupport: "requestIdleCallback" in window,
-      ignoredImgAttributes: ["data-src", "data-sizes", "data-media", "data-srcset", "src", "srcset"],
-      acceptedDataAttributes: ["data-src", "data-sizes", "data-media", "data-srcset", "data-poster"],
-      eventsToBind: [
-        [doc, "scroll"],
-        [doc, "touchmove"],
-        [window, "resize"],
-        [window, "orientationchange"]
-      ]
-    };
+    var intersectionObserverSupport = "IntersectionObserver" in win && "IntersectionObserverEntry" in win && "intersectionRatio" in win.IntersectionObserverEntry.prototype;
+    var mutationObserverSupport = "MutationObserver" in win;
+    var idleCallbackSupport = "requestIdleCallback" in win;
+    var acceptedDataAttributes = ["data-src", "data-sizes", "data-media", "data-srcset", "data-poster"];
+    var eventsToBind = [
+      [doc, "scroll"],
+      [doc, "touchmove"],
+      [win, "resize"],
+      [win, "orientationchange"]
+    ];
 
     var options = {
       lazyClass: "lazy",
@@ -147,13 +145,13 @@
 
     var lazyElements = qsaEach(doc, selectorString);
 
-    if (env.intersectionObserverSupport === true) {
+    if (intersectionObserverSupport === true) {
       var intersectionListener = new IntersectionObserver(function (entries, observer) {
         entries.forEach(function (entry) {
           if (entry.isIntersecting === true || entry.intersectionRatio > 0) {
             var element = entry.target;
 
-            if (options.idlyLoad === true && env.idleCallbackSupport === true) {
+            if (options.idlyLoad === true && idleCallbackSupport === true) {
               requestIdleCallback(function () { return yallLoad(element); }, idleCallbackOptions);
             } else {
               yallLoad(element);
@@ -170,17 +168,17 @@
 
       lazyElements.forEach(function (lazyElement) { return intersectionListener.observe(lazyElement); });
     } else {
-      env.eventsToBind.forEach(function (eventPair) { return eventPair[0].addEventListener(eventPair[1], yallBack); });
+      eventsToBind.forEach(function (eventPair) { return eventPair[0].addEventListener(eventPair[1], yallBack); });
       yallBack();
     }
 
-    if (env.mutationObserverSupport === true && options.observeChanges === true) {
+    if (mutationObserverSupport === true && options.observeChanges === true) {
       new MutationObserver(function (mutations) { return mutations.forEach(function () {
         qsaEach(doc, selectorString, function (newElement) {
           if (lazyElements.indexOf(newElement) === -1) {
             lazyElements.push(newElement);
 
-            if (env.intersectionObserverSupport === true) {
+            if (intersectionObserverSupport === true) {
               intersectionListener.observe(newElement);
             } else {
               yallBack();

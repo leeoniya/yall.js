@@ -1,4 +1,5 @@
 const doc = document;
+const win = window;
 
 function qsaEach(el, sel, fn) {
 	var els = [].slice.call(el.querySelectorAll(sel));
@@ -57,7 +58,7 @@ export function yall(userOptions) {
   // to make sure the data attr is in a whitelist to avoid changing *all* of them)
   let yallFlipDataAttrs = function(element) {
     for (let dataAttribute in element.dataset) {
-      if (env.acceptedDataAttributes.indexOf(`data-${dataAttribute}`) !== -1) {
+      if (acceptedDataAttributes.indexOf(`data-${dataAttribute}`) !== -1) {
         element.setAttribute(dataAttribute, element.dataset[dataAttribute]);
         element.removeAttribute(`data-${dataAttribute}`);
       }
@@ -74,8 +75,8 @@ export function yall(userOptions) {
 
       setTimeout(() => {
         lazyElements.forEach(lazyElement => {
-          if (lazyElement.getBoundingClientRect().top <= (window.innerHeight + options.threshold) && lazyElement.getBoundingClientRect().bottom >= -(options.threshold) && getComputedStyle(lazyElement).display !== "none") {
-            if (options.idlyLoad === true && env.idleCallbackSupport === true) {
+          if (lazyElement.getBoundingClientRect().top <= (win.innerHeight + options.threshold) && lazyElement.getBoundingClientRect().bottom >= -(options.threshold) && getComputedStyle(lazyElement).display !== "none") {
+            if (options.idlyLoad === true && idleCallbackSupport === true) {
               requestIdleCallback(() => {
                 yallLoad(lazyElement);
               }, idleCallbackOptions);
@@ -91,25 +92,23 @@ export function yall(userOptions) {
         active = false;
 
         if (lazyElements.length === 0 && options.observeChanges === false) {
-          env.eventsToBind.forEach(eventPair => eventPair[0].removeEventListener(eventPair[1], yallBack));
+          eventsToBind.forEach(eventPair => eventPair[0].removeEventListener(eventPair[1], yallBack));
         }
       }, options.throttleTime);
     }
   };
 
-  const env = {
-    intersectionObserverSupport: "IntersectionObserver" in window && "IntersectionObserverEntry" in window && "intersectionRatio" in window.IntersectionObserverEntry.prototype,
-    mutationObserverSupport: "MutationObserver" in window,
-    idleCallbackSupport: "requestIdleCallback" in window,
-    ignoredImgAttributes: ["data-src", "data-sizes", "data-media", "data-srcset", "src", "srcset"],
-    acceptedDataAttributes: ["data-src", "data-sizes", "data-media", "data-srcset", "data-poster"],
-    eventsToBind: [
-      [doc, "scroll"],
-      [doc, "touchmove"],
-      [window, "resize"],
-      [window, "orientationchange"]
-    ]
-  };
+  const intersectionObserverSupport = "IntersectionObserver" in win && "IntersectionObserverEntry" in win && "intersectionRatio" in win.IntersectionObserverEntry.prototype;
+  const mutationObserverSupport = "MutationObserver" in win;
+  const idleCallbackSupport = "requestIdleCallback" in win;
+  const ignoredImgAttributes = ["data-src", "data-sizes", "data-media", "data-srcset", "src", "srcset"];
+  const acceptedDataAttributes = ["data-src", "data-sizes", "data-media", "data-srcset", "data-poster"];
+  const eventsToBind = [
+    [doc, "scroll"],
+    [doc, "touchmove"],
+    [win, "resize"],
+    [win, "orientationchange"]
+  ];
 
   const options = {
     lazyClass: "lazy",
@@ -138,13 +137,13 @@ export function yall(userOptions) {
 
   let lazyElements = qsaEach(doc, selectorString);
 
-  if (env.intersectionObserverSupport === true) {
+  if (intersectionObserverSupport === true) {
     var intersectionListener = new IntersectionObserver((entries, observer) => {
       entries.forEach(entry => {
         if (entry.isIntersecting === true || entry.intersectionRatio > 0) {
           let element = entry.target;
 
-          if (options.idlyLoad === true && env.idleCallbackSupport === true) {
+          if (options.idlyLoad === true && idleCallbackSupport === true) {
             requestIdleCallback(() => yallLoad(element), idleCallbackOptions);
           } else {
             yallLoad(element);
@@ -161,17 +160,17 @@ export function yall(userOptions) {
 
     lazyElements.forEach(lazyElement => intersectionListener.observe(lazyElement));
   } else {
-    env.eventsToBind.forEach(eventPair => eventPair[0].addEventListener(eventPair[1], yallBack));
+    eventsToBind.forEach(eventPair => eventPair[0].addEventListener(eventPair[1], yallBack));
     yallBack();
   }
 
-  if (env.mutationObserverSupport === true && options.observeChanges === true) {
+  if (mutationObserverSupport === true && options.observeChanges === true) {
     new MutationObserver(mutations => mutations.forEach(() => {
       qsaEach(doc, selectorString, newElement => {
         if (lazyElements.indexOf(newElement) === -1) {
           lazyElements.push(newElement);
 
-          if (env.intersectionObserverSupport === true) {
+          if (intersectionObserverSupport === true) {
             intersectionListener.observe(newElement);
           } else {
             yallBack();
