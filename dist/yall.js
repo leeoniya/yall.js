@@ -19,16 +19,26 @@
   var evListener = "EventListener";
   var remEv = rem + evListener;
   var addEv = add + evListener;
+  var tagName = "tagName";
+  var dataset = "dataset";
+  var getBoundingClientRect = "getBoundingClientRect";
+  var _IntersectionObserver = "IntersectionObserver";
+  var _IntersectionObserverEntry = "IntersectionObserverEntry";
+  var intersectionRatio = "intersectionRatio";
+  var _MutationObserver = "MutationObserver";
+  var _requestIdleCallback = "requestIdleCallback";
+
+  var _data = "data-";
 
   var evOpts = {passive: true};
 
   function qsaEach(el, sel, fn) {
-  	var els = [].slice.call(el.querySelectorAll(sel));
+    var els = [].slice.call(el.querySelectorAll(sel));
 
-  	if (fn != null)
-  		{ els.forEach(fn); }
+    if (fn != null)
+      { els.forEach(fn); }
 
-  	return els;
+    return els;
   }
 
   function yall(userOpts) {
@@ -36,11 +46,11 @@
     // scroll handlers/intersection observers further down.
     var yallLoad = function(element) {
       // Lazy load <img> elements
-      if (element.tagName === "IMG") {
+      if (element[tagName] === "IMG") {
         var parentElement = element.parentNode;
 
         // Is the parent element a <picture>?
-        if (parentElement.tagName === "PICTURE") {
+        if (parentElement[tagName] === "PICTURE") {
           qsaEach(parentElement, "source", function (source) { return yallFlipDataAttrs(source); });
         }
 
@@ -48,7 +58,7 @@
       }
 
       // Lazy load <video> elements
-      if (element.tagName === "VIDEO") {
+      if (element[tagName] === "VIDEO") {
         qsaEach(element, "source", function (source) { return yallFlipDataAttrs(source); });
 
         // We didn't need this before, but with the addition of lazy loading
@@ -62,9 +72,9 @@
       }
 
       // Lazy load <iframe> elements
-      if (element.tagName === "IFRAME") {
-        element.src = element.dataset.src;
-        element[remAttr]("data-src");
+      if (element[tagName] === "IFRAME") {
+        element.src = element[dataset].src;
+        element[remAttr](_data+"src");
       }
 
       // Lazy load CSS background images
@@ -78,9 +88,9 @@
     // the code. This just flips all the data- attrs on an element (after checking
     // to make sure the data attr is in a whitelist to avoid changing *all* of them)
     var yallFlipDataAttrs = function(element) {
-      for (var dataAttribute in element.dataset) {
+      for (var dataAttribute in element[dataset]) {
         if (acceptedDataAttributes.indexOf(("data-" + dataAttribute)) !== -1) {
-          element[setAttr](dataAttribute, element.dataset[dataAttribute]);
+          element[setAttr](dataAttribute, element[dataset][dataAttribute]);
           element[remAttr](("data-" + dataAttribute));
         }
       }
@@ -96,9 +106,9 @@
 
         setTimeout(function () {
           lazyElements.forEach(function (lazyElement) {
-            if (lazyElement.getBoundingClientRect().top <= (win.innerHeight + opts[threshold]) && lazyElement.getBoundingClientRect().bottom >= -(opts[threshold]) && getComputedStyle(lazyElement).display !== "none") {
+            if (lazyElement[getBoundingClientRect]().top <= (win.innerHeight + opts[threshold]) && lazyElement[getBoundingClientRect]().bottom >= -(opts[threshold]) && getComputedStyle(lazyElement).display !== "none") {
               if (opts[idlyLoad] && idleCallbackSupport) {
-                requestIdleCallback(function () {
+                win[_requestIdleCallback](function () {
                   yallLoad(lazyElement);
                 }, idleCallbackOpts);
               } else {
@@ -119,10 +129,10 @@
       }
     };
 
-    var intersectionObserverSupport = "IntersectionObserver" in win && "IntersectionObserverEntry" in win && "intersectionRatio" in win.IntersectionObserverEntry.prototype;
-    var mutationObserverSupport = "MutationObserver" in win;
-    var idleCallbackSupport = "requestIdleCallback" in win;
-    var acceptedDataAttributes = ["data-src", "data-sizes", "data-media", "data-srcset", "data-poster"];
+    var intersectionObserverSupport = _IntersectionObserver in win && _IntersectionObserverEntry in win && intersectionRatio in win[_IntersectionObserverEntry].prototype;
+    var mutationObserverSupport = _MutationObserver in win;
+    var idleCallbackSupport = _requestIdleCallback in win;
+    var acceptedDataAttributes = [_data+"src", _data+"sizes", _data+"media", _data+"srcset", _data+"poster"];
     var eventsToBind = [
       [doc, "scroll"],
       [doc, "touchmove"],
@@ -130,31 +140,31 @@
       [win, "orientationchange"]
     ];
 
-      var lazyClass = "lazyClass";
-      var lazyBackgroundClass = "lazyBackgroundClass";
-      var lazyBackgroundLoaded = "lazyBackgroundLoaded";
-      var throttleTime = "throttleTime";
-      var idlyLoad = "idlyLoad";
-      var idleLoadTimeout = "idleLoadTimeout";
-      var threshold = "threshold";
-      var observeChanges = "observeChanges";
-      var observeRootSelector = "observeRootSelector";
-      var mutationObserveropts = "mutationObserveropts";
+    var lazyClass = "lazyClass";
+    var lazyBackgroundClass = "lazyBackgroundClass";
+    var lazyBackgroundLoaded = "lazyBackgroundLoaded";
+    var throttleTime = "throttleTime";
+    var idlyLoad = "idlyLoad";
+    var idleLoadTimeout = "idleLoadTimeout";
+    var threshold = "threshold";
+    var observeChanges = "observeChanges";
+    var observeRootSelector = "observeRootSelector";
+    var mutationObserverOpts = "mutationObserverOptions";
 
     var opts = {};
 
-     opts[lazyClass] = "lazy";
-     opts[lazyBackgroundClass] = "lazy-bg";
-     opts[lazyBackgroundLoaded] = "lazy-bg-loaded";
-     opts[throttleTime] = 200;
-     opts[idlyLoad] = false;
-     opts[idleLoadTimeout] = 100;
-     opts[threshold] = 200;
-     opts[observeChanges] = false;
-     opts[observeRootSelector] = "body";
-     opts[mutationObserveropts] = {
-        childList: true
-      };
+    opts[lazyClass] = "lazy";
+    opts[lazyBackgroundClass] = "lazy-bg";
+    opts[lazyBackgroundLoaded] = "lazy-bg-loaded";
+    opts[throttleTime] = 200;
+    opts[idlyLoad] = false;
+    opts[idleLoadTimeout] = 100;
+    opts[threshold] = 200;
+    opts[observeChanges] = false;
+    opts[observeRootSelector] = "body";
+    opts[mutationObserverOpts] = {
+       childList: true
+    };
 
     if (userOpts != null) {
       for (var key in userOpts)
@@ -169,13 +179,13 @@
     var lazyElements = qsaEach(doc, selectorString);
 
     if (intersectionObserverSupport) {
-      var intersectionListener = new IntersectionObserver(function (entries, observer) {
+      var intersectionListener = new win[_IntersectionObserver](function (entries, observer) {
         entries.forEach(function (entry) {
-          if (entry.isIntersecting || entry.intersectionRatio > 0) {
+          if (entry.isIntersecting || entry[intersectionRatio] > 0) {
             var element = entry.target;
 
             if (opts[idlyLoad] && idleCallbackSupport) {
-              requestIdleCallback(function () { return yallLoad(element); }, idleCallbackOpts);
+              win[_requestIdleCallback](function () { return yallLoad(element); }, idleCallbackOpts);
             } else {
               yallLoad(element);
             }
@@ -196,7 +206,7 @@
     }
 
     if (mutationObserverSupport && opts[observeChanges]) {
-      new MutationObserver(function (mutations) { return mutations.forEach(function () {
+      new win[_MutationObserver](function (mutations) { return mutations.forEach(function () {
         qsaEach(doc, selectorString, function (newElement) {
           if (lazyElements.indexOf(newElement) === -1) {
             lazyElements.push(newElement);
@@ -208,7 +218,7 @@
             }
           }
         });
-      }); }).observe(doc.querySelector(opts[observeRootSelector]), opts[mutationObserverOptions]);
+      }); }).observe(doc.querySelector(opts[observeRootSelector]), opts[mutationObserverOpts]);
     }
   }
 

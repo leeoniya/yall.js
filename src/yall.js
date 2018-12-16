@@ -10,16 +10,26 @@ const classList = "classList";
 const evListener = "EventListener";
 const remEv = rem + evListener;
 const addEv = add + evListener;
+const tagName = "tagName";
+const dataset = "dataset";
+const getBoundingClientRect = "getBoundingClientRect";
+const _IntersectionObserver = "IntersectionObserver";
+const _IntersectionObserverEntry = "IntersectionObserverEntry";
+const intersectionRatio = "intersectionRatio";
+const _MutationObserver = "MutationObserver";
+const _requestIdleCallback = "requestIdleCallback";
+
+const _data = "data-";
 
 const evOpts = {passive: true};
 
 function qsaEach(el, sel, fn) {
-	var els = [].slice.call(el.querySelectorAll(sel));
+  var els = [].slice.call(el.querySelectorAll(sel));
 
-	if (fn != null)
-		els.forEach(fn);
+  if (fn != null)
+    els.forEach(fn);
 
-	return els;
+  return els;
 }
 
 export function yall(userOpts) {
@@ -27,11 +37,11 @@ export function yall(userOpts) {
   // scroll handlers/intersection observers further down.
   let yallLoad = function(element) {
     // Lazy load <img> elements
-    if (element.tagName === "IMG") {
+    if (element[tagName] === "IMG") {
       let parentElement = element.parentNode;
 
       // Is the parent element a <picture>?
-      if (parentElement.tagName === "PICTURE") {
+      if (parentElement[tagName] === "PICTURE") {
         qsaEach(parentElement, "source", source => yallFlipDataAttrs(source));
       }
 
@@ -39,7 +49,7 @@ export function yall(userOpts) {
     }
 
     // Lazy load <video> elements
-    if (element.tagName === "VIDEO") {
+    if (element[tagName] === "VIDEO") {
       qsaEach(element, "source", source => yallFlipDataAttrs(source));
 
       // We didn't need this before, but with the addition of lazy loading
@@ -53,9 +63,9 @@ export function yall(userOpts) {
     }
 
     // Lazy load <iframe> elements
-    if (element.tagName === "IFRAME") {
-      element.src = element.dataset.src;
-      element[remAttr]("data-src");
+    if (element[tagName] === "IFRAME") {
+      element.src = element[dataset].src;
+      element[remAttr](_data+"src");
     }
 
     // Lazy load CSS background images
@@ -69,9 +79,9 @@ export function yall(userOpts) {
   // the code. This just flips all the data- attrs on an element (after checking
   // to make sure the data attr is in a whitelist to avoid changing *all* of them)
   let yallFlipDataAttrs = function(element) {
-    for (let dataAttribute in element.dataset) {
+    for (let dataAttribute in element[dataset]) {
       if (acceptedDataAttributes.indexOf(`data-${dataAttribute}`) !== -1) {
-        element[setAttr](dataAttribute, element.dataset[dataAttribute]);
+        element[setAttr](dataAttribute, element[dataset][dataAttribute]);
         element[remAttr](`data-${dataAttribute}`);
       }
     }
@@ -87,9 +97,9 @@ export function yall(userOpts) {
 
       setTimeout(() => {
         lazyElements.forEach(lazyElement => {
-          if (lazyElement.getBoundingClientRect().top <= (win.innerHeight + opts[threshold]) && lazyElement.getBoundingClientRect().bottom >= -(opts[threshold]) && getComputedStyle(lazyElement).display !== "none") {
+          if (lazyElement[getBoundingClientRect]().top <= (win.innerHeight + opts[threshold]) && lazyElement[getBoundingClientRect]().bottom >= -(opts[threshold]) && getComputedStyle(lazyElement).display !== "none") {
             if (opts[idlyLoad] && idleCallbackSupport) {
-              requestIdleCallback(() => {
+              win[_requestIdleCallback](() => {
                 yallLoad(lazyElement);
               }, idleCallbackOpts);
             } else {
@@ -110,11 +120,11 @@ export function yall(userOpts) {
     }
   };
 
-  const intersectionObserverSupport = "IntersectionObserver" in win && "IntersectionObserverEntry" in win && "intersectionRatio" in win.IntersectionObserverEntry.prototype;
-  const mutationObserverSupport = "MutationObserver" in win;
-  const idleCallbackSupport = "requestIdleCallback" in win;
-  const ignoredImgAttributes = ["data-src", "data-sizes", "data-media", "data-srcset", "src", "srcset"];
-  const acceptedDataAttributes = ["data-src", "data-sizes", "data-media", "data-srcset", "data-poster"];
+  const intersectionObserverSupport = _IntersectionObserver in win && _IntersectionObserverEntry in win && intersectionRatio in win[_IntersectionObserverEntry].prototype;
+  const mutationObserverSupport = _MutationObserver in win;
+  const idleCallbackSupport = _requestIdleCallback in win;
+  const ignoredImgAttributes = [_data+"src", _data+"sizes", _data+"media", _data+"srcset", "src", "srcset"];
+  const acceptedDataAttributes = [_data+"src", _data+"sizes", _data+"media", _data+"srcset", _data+"poster"];
   const eventsToBind = [
     [doc, "scroll"],
     [doc, "touchmove"],
@@ -122,31 +132,31 @@ export function yall(userOpts) {
     [win, "orientationchange"]
   ];
 
-    const lazyClass = "lazyClass";
-    const lazyBackgroundClass = "lazyBackgroundClass";
-    const lazyBackgroundLoaded = "lazyBackgroundLoaded";
-    const throttleTime = "throttleTime";
-    const idlyLoad = "idlyLoad";
-    const idleLoadTimeout = "idleLoadTimeout";
-    const threshold = "threshold";
-    const observeChanges = "observeChanges";
-    const observeRootSelector = "observeRootSelector";
-    const mutationObserveropts = "mutationObserveropts";
+  const lazyClass = "lazyClass";
+  const lazyBackgroundClass = "lazyBackgroundClass";
+  const lazyBackgroundLoaded = "lazyBackgroundLoaded";
+  const throttleTime = "throttleTime";
+  const idlyLoad = "idlyLoad";
+  const idleLoadTimeout = "idleLoadTimeout";
+  const threshold = "threshold";
+  const observeChanges = "observeChanges";
+  const observeRootSelector = "observeRootSelector";
+  const mutationObserverOpts = "mutationObserverOptions";
 
   const opts = {};
 
-   opts[lazyClass] = "lazy";
-   opts[lazyBackgroundClass] = "lazy-bg";
-   opts[lazyBackgroundLoaded] = "lazy-bg-loaded";
-   opts[throttleTime] = 200;
-   opts[idlyLoad] = false;
-   opts[idleLoadTimeout] = 100;
-   opts[threshold] = 200;
-   opts[observeChanges] = false;
-   opts[observeRootSelector] = "body";
-   opts[mutationObserveropts] = {
-      childList: true
-    };
+  opts[lazyClass] = "lazy";
+  opts[lazyBackgroundClass] = "lazy-bg";
+  opts[lazyBackgroundLoaded] = "lazy-bg-loaded";
+  opts[throttleTime] = 200;
+  opts[idlyLoad] = false;
+  opts[idleLoadTimeout] = 100;
+  opts[threshold] = 200;
+  opts[observeChanges] = false;
+  opts[observeRootSelector] = "body";
+  opts[mutationObserverOpts] = {
+     childList: true
+  };
 
   if (userOpts != null) {
     for (let key in userOpts)
@@ -161,13 +171,13 @@ export function yall(userOpts) {
   let lazyElements = qsaEach(doc, selectorString);
 
   if (intersectionObserverSupport) {
-    var intersectionListener = new IntersectionObserver((entries, observer) => {
+    var intersectionListener = new win[_IntersectionObserver]((entries, observer) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting || entry.intersectionRatio > 0) {
+        if (entry.isIntersecting || entry[intersectionRatio] > 0) {
           let element = entry.target;
 
           if (opts[idlyLoad] && idleCallbackSupport) {
-            requestIdleCallback(() => yallLoad(element), idleCallbackOpts);
+            win[_requestIdleCallback](() => yallLoad(element), idleCallbackOpts);
           } else {
             yallLoad(element);
           }
@@ -188,7 +198,7 @@ export function yall(userOpts) {
   }
 
   if (mutationObserverSupport && opts[observeChanges]) {
-    new MutationObserver(mutations => mutations.forEach(() => {
+    new win[_MutationObserver](mutations => mutations.forEach(() => {
       qsaEach(doc, selectorString, newElement => {
         if (lazyElements.indexOf(newElement) === -1) {
           lazyElements.push(newElement);
@@ -200,6 +210,6 @@ export function yall(userOpts) {
           }
         }
       });
-    })).observe(doc.querySelector(opts[observeRootSelector]), opts[mutationObserverOptions]);
+    })).observe(doc.querySelector(opts[observeRootSelector]), opts[mutationObserverOpts]);
   }
 }
